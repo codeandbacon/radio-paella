@@ -1,8 +1,9 @@
-from machine import Pin, SPI
+from machine import Pin
 from time import sleep
-from esp_spi import EspSPI
-from helper import *
-from rfm69.registers import *
+from core.spi import SPI
+from core.helper import *
+from .registers import *
+import utime
 
 # TODO: time to find a better name for the repo
 
@@ -12,13 +13,17 @@ PACKET_LENGTH_CONF = {
     2: 'INFINITE'
 }
 
+
 class RFM69HCW(object):
 
-    def __init__(self, spi, cs, gdo0=None, endian='big', xosc=32000000):
+    def __init__(self, spi, cs, rst=None, endian='big', xosc=32000000):
         
-        self.spi = EspSPI(spi, cs)
+        self.spi = SPI(spi, cs)
         self.FREQ_XOSC = xosc
         self.endian = endian
+        self.rst = rst
+        if rst:
+            rst.value(0)
 
     def set_bits(self, register, change, start=0, length=8):
         current = read_bits(self.spi.read(register))
@@ -29,6 +34,16 @@ class RFM69HCW(object):
         change_mask = change_mask[0:start] + bits_change + change_mask[start+length:8]
         change = current & int(mask, 2) | int(change_mask, 2)
         self.spi.write(register, change)
+
+    def reset(self):
+        if not self.rst:
+            print('no reset pin')
+            return
+        self.rst.value(1)
+        utime.sleep_ms(5)
+        self.rst.value(0)
+        utime.sleep_ms(5)
+
 
     # RegFifo 0x00
 
