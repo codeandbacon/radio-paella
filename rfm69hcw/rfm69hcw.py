@@ -1,11 +1,10 @@
+from micropython import const
 from machine import Pin
 from time import sleep
-from core.spi import SPI
 from core.helper import *
+from core.interface import RadioInterface
 from .registers import *
 import utime
-
-# TODO: time to find a better name for the repo
 
 PACKET_LENGTH_CONF = {
     0: 'FIXED',
@@ -13,27 +12,29 @@ PACKET_LENGTH_CONF = {
     2: 'INFINITE'
 }
 
+SINGLE_READ = const(0x00)
+SINGLE_WRITE = const(0x80)
 
-class RFM69HCW(object):
+
+class RFM69HCW(RadioInterface):
 
     def __init__(self, spi, cs, rst=None, endian='big', xosc=32000000):
         
-        self.spi = SPI(spi, cs)
+        super(RFM69HCW, self).__init__(spi, cs)
+
         self.FREQ_XOSC = xosc
         self.endian = endian
         self.rst = rst
         if rst:
             rst.value(0)
 
-    def set_bits(self, register, change, start=0, length=8):
-        current = read_bits(self.spi.read(register))
-        mask = str.format(BITS_F, 255)
-        mask = mask[0:start] + '0'*length + mask[start+length:8]
-        change_mask = str.format(BITS_F, 0)
-        bits_change = str.format(BITS_F, change)[8-length:8]
-        change_mask = change_mask[0:start] + bits_change + change_mask[start+length:8]
-        change = current & int(mask, 2) | int(change_mask, 2)
-        self.spi.write(register, change)
+    def read(self, address):
+         # first byte is empty
+        return self._spi_read(address)[1]
+
+    def write(self, address, byte):
+        write_buf = bytearray([address + SINGLE_WRITE, byte])
+        self._spi_write(write_buf)
 
     def reset(self):
         if not self.rst:
@@ -49,6 +50,27 @@ class RFM69HCW(object):
 
     # RegOpMode 0x01
 
+    def get_sequencer_off(self):
+        res = read_bits(self.read(OPMODE), 0x00, 0x01)
+        return res
+
+    def set_sequencer_off(self, value):
+        self.set_bits(OPMODE, value, 0x00, 0x01)
+
+    def get_listen_on(self):
+        res = read_bits(self.read(OPMODE), 0x01, 0x01)
+        return res
+
+    def set_listen_on(self, value):
+        self.set_bits(OPMODE, value, 0x01, 0x01)
+
+    def get_mode(self):
+        res = read_bits(self.read(OPMODE), 0x03, 0x02)
+        return res
+
+    def set_mode(self, value):
+        self.set_bits(OPMODE, value, 0x03, 0x02)
+
     # RegDataModul 0x02
 
     # RegBitrateMsb 0x03
@@ -58,7 +80,7 @@ class RFM69HCW(object):
     # RegPacketConfig1 0x37
 
     def get_packet_length_conf(self):
-        res = read_bits(self.spi.read(PACKETCONFIG1), 0x00, 0x01)
+        res = read_bits(self.read(PACKETCONFIG1), 0x00, 0x01)
         return PACKET_LENGTH_CONF[res]
 
     def set_packet_length_conf(self, pkt_len):
