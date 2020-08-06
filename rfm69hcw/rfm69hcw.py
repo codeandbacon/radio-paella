@@ -12,6 +12,11 @@ PACKET_LENGTH_CONF = {
     2: 'INFINITE'
 }
 
+MODULATION_TYPE = {
+    0: 'FSK',
+    1: 'OOK'
+}
+
 SINGLE_READ = const(0x00)
 SINGLE_WRITE = const(0x80)
 
@@ -73,9 +78,44 @@ class RFM69HCW(RadioInterface):
 
     # RegDataModul 0x02
 
-    # RegBitrateMsb 0x03
+    def get_data_mode(self):
+        res = read_bits(self.read(DATAMODUL), 0x00, 0x02)
+        return res
 
-    # RegBitrateMsb 0x04
+    def set_data_mode(self, value):
+        pass
+
+    def get_modulation_type(self):
+        res = read_bits(self.read(DATAMODUL), 0x02, 0x02)
+        return MODULATION_TYPE[res]
+
+    def set_modulation_type(self, value):
+        codes = reverse(MODULATION_TYPE)
+        self.set_bits(DATAMODUL, codes[value], 0x02, 0x02)
+
+    def get_modulation_shaping(self):
+        res = read_bits(self.read(DATAMODUL), 0x07, 0x02)
+        return res
+
+    # RegBitrateMsb 0x03
+    # RegBitrateLsb 0x04
+
+    def get_bitrate(self):
+        bitrate = (read_bits(self.read(BITRATEMSB)) << 8) + read_bits(self.read(BITRATELSB))
+        return self.FREQ_XOSC / bitrate
+
+    def set_bitrate(self, value):
+        value = round(self.FREQ_XOSC / value)
+        msb, lsb = value.to_bytes(2, self.endian)
+        self.set_bits(BITRATEMSB, msb)
+        self.set_bits(BITRATELSB, msb)
+
+    # RegRfrMsb 0x07
+    # RegRfrMid 0x08
+    # RegRfrLsb 0x09
+
+    def get_frequency(self):
+        pass
 
     # RegPacketConfig1 0x37
 
