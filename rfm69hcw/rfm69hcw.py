@@ -37,6 +37,10 @@ class RFM69HCW(RadioInterface):
          # first byte is empty
         return self._spi_read(address)[1]
 
+    def burst_read(self, address, n):
+        res = self._spi_read(address, length=n+1)
+        return res[1:]
+
     def write(self, address, byte):
         write_buf = bytearray([address + SINGLE_WRITE, byte])
         self._spi_write(write_buf)
@@ -115,6 +119,14 @@ class RFM69HCW(RadioInterface):
     # RegRfrLsb 0x09
 
     def get_frequency(self):
+        f_step = self.FREQ_XOSC / (2**19)
+        f_rf = int.from_bytes(self.burst_read(0x07, 3), 3, self.endian)
+        return f_step * f_rf
+
+    def set_frequency(self, value):
+        # f_step = self.FREQ_XOSC / (2**19)
+        # fr = round(value/f_step)
+        # fr.to_bytes(3, self.endian)
         pass
 
     # RegPacketConfig1 0x37
