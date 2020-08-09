@@ -1,12 +1,12 @@
 import sys
 import math
 from machine import Pin, SPI
-from status import *
-from configuration import *
-from strobes import *
+from .status import *
+from .configuration import *
+from .strobes import *
 from time import sleep
 from esp_spi import EspSPI
-from response import *
+from .response import *
 
 BITS_F = '{0:08b}'
 
