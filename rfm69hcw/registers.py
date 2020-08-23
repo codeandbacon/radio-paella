@@ -5,10 +5,18 @@ OPMODE = const(0x01)
 DATAMODUL = const(0x02)
 BITRATEMSB = const(0x03)
 BITRATELSB = const(0x04)
-
+FDEVMSB = const(0x05)
+FDEVLSB = const(0x06)
 RFRMSB = const(0x07)
 RFRMID = const(0x08)
 RFRLSB = const(0x09)
+VERSION = const(0x10)
+PALEVEL = const(0x11)
+
+LNA = const(0x18)
+RXBW = const(0x19)
+
+DIOMAPPING1 = const(0x25)
 
 IRQFLAGS1 = const(0x27)
 IRQFLAGS2 = const(0x28)
@@ -25,3 +33,8 @@ SYNCVALUE6 = const(0x34)
 SYNCVALUE7 = const(0x35)
 SYNCVALUE8 = const(0x36)
 PACKETCONFIG1 = const(0x37)
+
+FIFOTHRESH = const(0x3c)
+TESTPA1 = const(0x5a)
+TESTPA2 = const(0x5c)
+TESTDAGC = const(0x6f)
