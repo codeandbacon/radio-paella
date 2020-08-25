@@ -7,7 +7,7 @@
 |esp8266    |working*   |
 |esp32      |working    |
 |SAMD51     |WIP        |
-|STM32      |need hw    |
+|STM32      |WIP        |
 \* memory issues, need to move to frozen module
 
 #### notes
@@ -21,7 +21,7 @@
 |chip      |ask|ook|2fsk|2gfsk|4fsk|msk|gmsk|psk|lora|note|
 |:--       |:-:|:-:|:-: |:-:  |:-: |:-:|:-: |:-:|:-: |:-  |
 |cc1101    |Y  |Y  |Y   |Y    |Y   |Y  |    |   |    |WIP |
-|RFM69W    |   |Y  |Y   |Y    |    |Y  |Y   |   |    |WIP |
+|RFM69     |   |Y  |Y   |Y    |    |Y  |Y   |   |    |WIP |
 |SX1276    |   |Y  |Y   |Y    |    |Y  |Y   |   |Y   |    |
 |SPIRIT1   |Y  |Y  |Y   |Y    |    |Y  |Y   |   |    |find dev board|
 |nRF905    |   |   |    |Y    |    |   |    |   |    |    |

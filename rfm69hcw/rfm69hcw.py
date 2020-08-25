@@ -5,6 +5,7 @@ from core.helper import *
 from core.interface import RadioInterface
 from .registers import *
 import utime
+import math
 
 MODE = {
     0: 'SLEEP',
@@ -131,7 +132,7 @@ class RFM69HCW(RadioInterface):
     # RegBitrateLsb 0x04
 
     def get_bitrate(self):
-        bitrate = (read_bits(self.read(BITRATEMSB)) << 8) + read_bits(self.read(BITRATELSB))
+        bitrate = int.from_bytes(self.burst_read(FDEVMSB, 2), 2, self.endian)
         return self.FREQ_XOSC / bitrate
 
     def set_bitrate(self, value):
@@ -178,6 +179,9 @@ class RFM69HCW(RadioInterface):
     def get_pa_0_on(self):
         return read_bits(self.read(PALEVEL), 0x00, 0x01)
 
+    def set_pa_0_on(self, value):
+        self.set_bits(PALEVEL, value, 0x00, 0x01)
+
     def get_pa_1_on(self):
         return read_bits(self.read(PALEVEL), 0x01, 0x01)
 
@@ -198,7 +202,23 @@ class RFM69HCW(RadioInterface):
     # RegRxBw 0x19
 
     def get_dcc_freq(self):
-        pass
+        value = '{:08b}'.format(read_bits(self.read(RXBW)))
+        dcc_freq = int(value[:3], 2)
+        bw_mant = int(value[3:5], 2)
+        bw_exp = int(value[5:], 2)
+
+        mant_values = {
+            0: 16,
+            1: 20,
+            2: 24
+        }
+
+        bw_mant = mant_values[bw_mant]
+
+        rxbw = self.FREQ_XOSC/(bw_mant * (2**(bw_exp+2)))
+
+        fc = (4*rxbw)/((2*math.pi) * (2**(dcc_freq+2)))
+        return fc
 
     def set_dcc_freq(self, value):
         pass
@@ -212,7 +232,10 @@ class RFM69HCW(RadioInterface):
     # RegAfcBw 0x1a
 
     def get_dcc_freq_afc(self):
-        pass
+        return read_bits(self.read(AFCBW))
+    
+    def set_dcc_freq_afc(self, value):
+        self.burst_write(RXBW, value)
 
     # RegDioMapping1 0x25
 
@@ -275,7 +298,17 @@ class RFM69HCW(RadioInterface):
         return read_bits(self.read(SYNCCONFIG), 0x02, 0x03)
 
     def set_sync_size(self, value):
-        self.set_bits(SYNCCONFIG, value, 0x02, 0x03)  
+        self.set_bits(SYNCCONFIG, value, 0x02, 0x03)
+
+    # RegSyncValue1to8 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36
+
+    def get_sync_value(self):
+        return self.burst_read(SYNCVALUE1, 8)
+
+    def set_sync_value(self, value):
+        size = ((len(value) - 1) // 8) + 1
+        sync_word = int(value, 2).to_bytes(size, self.endian)
+        self.burst_write(SYNCVALUE1, sync_word)
 
     # RegPacketConfig1 0x37
 
@@ -317,6 +350,9 @@ class RFM69HCW(RadioInterface):
 
     def get_fifo_threshold(self):
         return read_bits(self.read(FIFOTHRESH), 0x01, 0x07)
+
+    def set_fifo_threshold(self, value):
+        self.set_bits(FIFOTHRESH, value, 0x01, 0x07)
 
     # RegTestPa1 0x5a
 
