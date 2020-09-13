@@ -43,10 +43,23 @@ t = RFM69HCW(spi, cs, rst=rst)
 t.reset()
 
 def send(data):
+    t.set_mode('STDBY')
+    while not t.get_mode_ready():
+        print('waiting stand by...')
+        utime.sleep_ms(1)
 
     data_len = len(data)
     d = bytearray([data_len]) + bytearray(data)
     t.set_fifo(d)
+    t.set_mode('TX')
+    print(t.get_mode())
+    while not t.get_mode_ready():
+        print('waiting TX...')
+        utime.sleep_ms(1)
+    t.set_mode('STDBY')
+    while not t.get_mode_ready():
+        print('waiting stand by...')
+        utime.sleep_ms(1)
 
 # OPMODE 0x01
 
@@ -62,7 +75,7 @@ t.set_modulation_shaping(1)
 
 # BITRATEMSB 0x03, 0x04
 
-t.set_bitrate(1000)
+t.set_bitrate(10000)
 
 # FDEVMSB 0x05, 0x06
 

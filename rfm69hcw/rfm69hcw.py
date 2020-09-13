@@ -48,6 +48,8 @@ class RFM69HCW(RadioInterface):
         if rst:
             rst.value(0)
 
+        self.FSTEP = xosc/(2**19)
+
     def read(self, address):
         # first byte is empty
         return self._spi_read(address)[1]
@@ -80,8 +82,10 @@ class RFM69HCW(RadioInterface):
         return self.read(FIFO)
 
     def set_fifo(self, data):
-        addr = FIFO
+        addr = FIFO | 0x80
         buf = bytearray([addr]) + data
+        # write_buf = bytearray([address + SINGLE_WRITE, byte])
+        # self._spi_write(write_buf)
         return self._spi_write(buf)        
 
     # RegOpMode 0x01
@@ -132,25 +136,27 @@ class RFM69HCW(RadioInterface):
     # RegBitrateLsb 0x04
 
     def get_bitrate(self):
-        bitrate = int.from_bytes(self.burst_read(FDEVMSB, 2), 2, self.endian)
+        bitrate = int.from_bytes(self.burst_read(BITRATEMSB, 2), 2, self.endian)
         return self.FREQ_XOSC / bitrate
 
     def set_bitrate(self, value):
         value = round(self.FREQ_XOSC / value)
         bitrate = value.to_bytes(2, self.endian)
+        print(bitrate[0], bitrate[1])
         self.burst_write(BITRATEMSB, bitrate)
+
+    def set_rate(self, v):
+        self.burst_write(BITRATEMSB, v)
 
     # RegFdevMsb 0x05
     # RegFdevMsb 0x06
 
     def get_deviation(self):
-        f_step = self.FREQ_XOSC / (2**19)
         dev = int.from_bytes(self.burst_read(FDEVMSB, 2), 2, self.endian)
-        return dev * f_step
+        return dev * self.FSTEP
 
     def set_deviation(self, value):
-        f_step = self.FREQ_XOSC / (2**19)
-        dev = int(value/f_step).to_bytes(2, self.endian)
+        dev = int(value/self.FSTEP).to_bytes(2, self.endian)
         self.burst_write(FDEVMSB, dev)
 
     # RegRfrMsb 0x07
@@ -158,13 +164,11 @@ class RFM69HCW(RadioInterface):
     # RegRfrLsb 0x09
 
     def get_frequency(self):
-        f_step = self.FREQ_XOSC / (2**19)
         f_rf = int.from_bytes(self.burst_read(RFRMSB, 3), 3, self.endian)
-        return f_step * f_rf
+        return self.FSTEP * f_rf
 
     def set_frequency(self, value):
-        f_step = self.FREQ_XOSC / (2**19)
-        fr = round(value/f_step)
+        fr = round(value/self.FSTEP)
         data = fr.to_bytes(3, self.endian)
         self.burst_write(RFRMSB, data)
 
@@ -340,6 +344,22 @@ class RFM69HCW(RadioInterface):
     def set_address_filtering(self, value):
         self.set_bits(PACKETCONFIG1, value, 0x05, 0x02)
 
+    # RegPayloadLength 0x38
+
+    def get_payload_length(self):
+        return read_bits(self.read(PAYLOADLENGTH))
+    
+    # RegAutoModes 0x3b
+
+    def get_enter_condition(self):
+        return read_bits(self.read(AUTOMODES), 0x00, 0x03)
+
+    def get_exit_condition(self):
+        return read_bits(self.read(AUTOMODES), 0x03, 0x03)
+
+    def get_intermediate_mode(self):
+        return read_bits(self.read(AUTOMODES), 0x05, 0x02)
+
     # RegFifoThresh 0x3c
 
     def get_tx_start_condition(self):
@@ -379,11 +399,26 @@ class RFM69HCW(RadioInterface):
         self.set_bits(TESTDAGC, value)
 
     def send(self, data):
-        tot_b = len(data)
-        payload = bytearray([0x80, 0x00, tot_b]) + bytearray(data)
+        data_len = len(data)
+        payload = bytearray([0x80, data_len, 0xff]) + bytearray(data)
+        print('sending {} bytes'.format(data_len))
         self._spi_write(payload)
+        
+        self.set_mode('STDBY')
+        while not self.get_mode_ready():
+            utime.sleep_ms(5)
+            print('waiting stand by...')
+        
         self.set_mode('TX')
         while not self.get_mode_ready():
-            utime.sleep(0.2)
-            print('waiting mode ready')
-        self.set_mode('TX')
+            utime.sleep_ms(5)
+            print('waiting tx...')
+
+        while self.get_fifo_not_empty():
+            utime.sleep(0.5)
+            print('waiting empty fifo...')
+
+        self.set_mode('STDBY')
+        while not self.get_mode_ready():
+            utime.sleep_ms(5)
+            print('waiting stand by...')
