@@ -172,6 +172,14 @@ class RFM69HCW(RadioInterface):
         data = fr.to_bytes(3, self.endian)
         self.burst_write(RFRMSB, data)
 
+    # RegAfcCtrl 0x0b
+
+    def get_afc_low_beta_on(self):
+        return read_bits(self.read(AFCCTRL), 0x02, 0x01)
+
+    def set_afc_low_beta_on(self, value):
+        self.set_bits(AFCCTRL, value, 0x02, 0x01)
+
     # RegVersion 0x10
 
     def get_version(self):
@@ -189,8 +197,14 @@ class RFM69HCW(RadioInterface):
     def get_pa_1_on(self):
         return read_bits(self.read(PALEVEL), 0x01, 0x01)
 
+    def set_pa_1_on(self, value):
+        self.set_bits(PALEVEL, value, 0x01, 0x01)
+
     def get_pa_2_on(self):
         return read_bits(self.read(PALEVEL), 0x02, 0x01)
+
+    def set_pa_2_on(self, value):
+        self.set_bits(PALEVEL, value, 0x02, 0x01)
 
     def get_output_power(self):
         return read_bits(self.read(PALEVEL), 0x03, 0x05)
@@ -358,7 +372,7 @@ class RFM69HCW(RadioInterface):
         return read_bits(self.read(AUTOMODES), 0x03, 0x03)
 
     def get_intermediate_mode(self):
-        return read_bits(self.read(AUTOMODES), 0x05, 0x02)
+        return read_bits(self.read(AUTOMODES), 0x06, 0x02)
 
     # RegFifoThresh 0x3c
 

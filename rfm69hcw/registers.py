@@ -10,6 +10,9 @@ FDEVLSB = const(0x06)
 RFRMSB = const(0x07)
 RFRMID = const(0x08)
 RFRLSB = const(0x09)
+
+AFCCTRL = const(0x0b)
+
 VERSION = const(0x10)
 PALEVEL = const(0x11)
 PARAMP = const(0x12)

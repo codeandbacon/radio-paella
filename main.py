@@ -71,17 +71,27 @@ t.set_mode('STDBY')
 
 t.set_data_mode(0)
 t.set_modulation_type('FSK')
-t.set_modulation_shaping(1)
+t.set_modulation_shaping(0)
 
 # BITRATEMSB 0x03, 0x04
 
-t.set_bitrate(10000)
+t.set_bitrate(2000)
 
 # FDEVMSB 0x05, 0x06
 
-t.set_deviation(250000)
+t.set_deviation(12050)
 
 t.set_packet_length_conf('VARIABLE')
+
+# AFCCTRL 0x0b
+
+t.set_afc_low_beta_on(0)
+
+# 0x11
+
+t.set_pa_0_on(0)
+t.set_pa_1_on(1)
+t.set_pa_2_on(1)
 
 # SYNCCONFIG 0x2e
 # SYNCVALUE 0x2f - 0x36
