@@ -209,13 +209,50 @@ class RFM69HCW(RadioInterface):
     def get_output_power(self):
         return read_bits(self.read(PALEVEL), 0x03, 0x05)
 
+    def set_output_power(self, value):
+        self.set_bits(PALEVEL, value, 0x03, 0x05)
+
+    # RegPaRAMP 0x12
+
+    def get_pa_ramp(self):
+        return read_bits(self.read(PARAMP), 0x04, 0x04)
+
+    def set_pa_ramp(self, value):
+        self.set_bits(PARAMP, value, 0x04, 0x04)
+
+    # RegOcp 0x13
+
+    def get_ocp_on(self):
+        return read_bits(self.read(OCP), 0x03, 0x01)
+
+    def set_ocp_on(self, value):
+        self.set_bits(OCP, value, 0x03, 0x01)
+
+    def get_ocp_trim(self):
+        return read_bits(self.read(OCP), 0x04, 0x04)
+
+    def set_ocp_trim(self, value):
+        self.set_bits(OCP, value, 0x04, 0x04)
+
     # RegLna 0x18
+
+    def get_lna_zin(self):
+        return read_bits(self.read(LNA), 0x01, 0x01)
+
+    def set_lna_zin(self, value):
+        self.set_bits(LNA, value, 0x01, 0x01)
 
     def get_lna_current_gain(self):
         return read_bits(self.read(LNA), 0x02, 0x03)
 
+    def set_lna_current_gain(self, value):
+        self.set_bits(LNA, value, 0x02, 0x03)
+
     def get_lna_gain_select(self):
         return read_bits(self.read(LNA), 0x05, 0x03)
+
+    def set_lna_gain_select(self, value):
+        self.set_bits(LNA, value, 0x05, 0x03)
 
     # RegRxBw 0x19
 
@@ -239,13 +276,13 @@ class RFM69HCW(RadioInterface):
         return fc
 
     def set_dcc_freq(self, value):
-        pass
+        self.set_bits(RXBW, value, 0x01, 0x03)
 
     def get_rx_bw(self):
         pass
 
     def set_rx_bw(self, value):
-        pass
+        self.set_bits(RXBW, value, 0x01, 0x03)
 
     # RegAfcBw 0x1a
 
@@ -253,14 +290,28 @@ class RFM69HCW(RadioInterface):
         return read_bits(self.read(AFCBW))
     
     def set_dcc_freq_afc(self, value):
-        self.burst_write(RXBW, value)
+        self.burst_write(AFCBW, value)
+
+    # RegAfcFei 0x1e
+
+    def get_afc_autoclear_on(self):
+        return read_bits(self.read(AFCFEI), 0x04, 0x01)
+
+    def set_afc_autoclear_on(self, value):
+        self.set_bits(AFCFEI, value, 0x04, 0x01)
+
+    def get_afc_auto_on(self):
+        return read_bits(self.read(AFCFEI), 0x05, 0x01)
+
+    def set_afc_auto_on(self, value):
+        self.set_bits(AFCFEI, value, 0x05, 0x01)
 
     # RegDioMapping1 0x25
 
-    def get_dio_mapping0(self):
+    def get_dio_0_mapping(self):
         return read_bits(self.read(DIOMAPPING1), 0x00, 0x02)
 
-    def set_dio_mapping0(self, value):
+    def set_dio_0_mapping(self, value):
         self.set_bits(DIOMAPPING1, value, 0x00, 0x02)
 
     # RegIrgFlags1 0x27

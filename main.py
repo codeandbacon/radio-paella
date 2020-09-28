@@ -29,14 +29,14 @@ if sys.platform == 'esp32':
     cs = Pin(17, Pin.OUT)
     gdo0 = Pin(4, Pin.IN)
     gdo2 = Pin(16, Pin.IN)
+    rst = Pin(27, Pin.OUT)
 else:
     cs = Pin(15, Pin.OUT)
     gdo0 = Pin(4, Pin.IN)
-    gdo2 = Pin(5, Pin.IN)
+    rst = Pin(5, Pin.OUT)
+    # gdo2 = Pin(5, Pin.IN)
 
 spi = init_spi()
-
-rst = Pin(27, Pin.OUT)
 
 t = RFM69HCW(spi, cs, rst=rst)
 
@@ -92,6 +92,24 @@ t.set_afc_low_beta_on(0)
 t.set_pa_0_on(0)
 t.set_pa_1_on(1)
 t.set_pa_2_on(1)
+t.set_output_power(5)
+
+# 0x12
+
+t.set_pa_ramp(3)
+
+# 0x13
+
+t.set_ocp_on(1)
+t.set_ocp_trim(0x0a)
+
+# 0x18
+
+t.set_lna_zin(0)
+
+# 0x25
+
+t.set_dio_0_mapping(1)
 
 # SYNCCONFIG 0x2e
 # SYNCVALUE 0x2f - 0x36
