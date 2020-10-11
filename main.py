@@ -61,6 +61,26 @@ def send(data):
         print('waiting stand by...')
         utime.sleep_ms(1)
 
+def recv():
+    current_mode = t.get_mode()
+    if current_mode != 'RX':
+        t.set_mode('RX')
+        while not t.get_mode_ready():
+            print('waiting stand by...')
+            utime.sleep_ms(1)
+
+    print(t.get_mode())
+
+    while not t.get_payload_ready():
+        print('no packet, waiting...')
+        utime.sleep_ms(1000)
+
+    l = t.get_fifo()
+    data = []
+    for i in range(l):
+        data.append(t.get_fifo())
+    return data
+
 # OPMODE 0x01
 
 t.set_sequencer_off(0)
@@ -71,15 +91,15 @@ t.set_mode('STDBY')
 
 t.set_data_mode(0)
 t.set_modulation_type('FSK')
-t.set_modulation_shaping(0)
+t.set_modulation_shaping(1)
 
 # BITRATEMSB 0x03, 0x04
 
-t.set_bitrate(2000)
+t.set_bitrate(250000)
 
 # FDEVMSB 0x05, 0x06
 
-t.set_deviation(12050)
+t.set_deviation(250000)
 
 t.set_packet_length_conf('VARIABLE')
 
@@ -91,12 +111,12 @@ t.set_afc_low_beta_on(0)
 
 t.set_pa_0_on(0)
 t.set_pa_1_on(1)
-t.set_pa_2_on(1)
-t.set_output_power(5)
+t.set_pa_2_on(0)
+t.set_output_power(31)
 
 # 0x12
 
-t.set_pa_ramp(3)
+t.set_pa_ramp(9)
 
 # 0x13
 
@@ -107,15 +127,41 @@ t.set_ocp_trim(0x0a)
 
 t.set_lna_zin(0)
 
+# 0x19
+
+t.set_dcc_freq(7)
+t.set_rx_bw_mant(0)
+t.set_rx_bw_exp(0)
+
+# 0x1a
+
+t.set_dcc_freq_afc(7)
+t.set_rx_bw_mant_afc(0)
+t.set_rx_bw_exp_afc(0)
+
 # 0x25
 
-t.set_dio_0_mapping(1)
+t.set_dio_0_mapping(0)
+
+# 0x2c
+
+t.set_preamble_size(4)
+
+# 0x2e
+
+t.set_sync_on(1)
+t.set_sync_size(1)
 
 # SYNCCONFIG 0x2e
 # SYNCVALUE 0x2f - 0x36
 
 t.set_sync_size(2)
 t.set_sync_value('0010110111010100')
+
+# 0x37
+
+t.set_packet_length_conf('VARIABLE')
+t.set_dc_free('NONE')
 
 # FIFOTHRESH 0x3c
 
@@ -124,12 +170,12 @@ t.set_fifo_threshold(15)
 
 # TESTPA1 0x5a
 
-t.set_pa_20_dbm_1(0x55)
+# t.set_pa_20_dbm_1(0x55)
 
 # TESTPA2 0x5c
 
-t.set_pa_20_dbm_2(0x70)
+# t.set_pa_20_dbm_2(0x70)
 
 # TESTDAGC 0x71
 
-t.set_continuous_dagc(0x30)
+# t.set_continuous_dagc(0x30)

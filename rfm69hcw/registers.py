@@ -10,9 +10,11 @@ FDEVLSB = const(0x06)
 RFRMSB = const(0x07)
 RFRMID = const(0x08)
 RFRLSB = const(0x09)
-
+OSC1  = const(0x0a)
 AFCCTRL = const(0x0b)
-
+LISTEN1 = const(0X0d)
+LISTEN2 = const(0x0e)
+LISTEN3 = const(0x0f)
 VERSION = const(0x10)
 PALEVEL = const(0x11)
 PARAMP = const(0x12)

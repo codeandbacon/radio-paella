@@ -142,7 +142,6 @@ class RFM69HCW(RadioInterface):
     def set_bitrate(self, value):
         value = round(self.FREQ_XOSC / value)
         bitrate = value.to_bytes(2, self.endian)
-        print(bitrate[0], bitrate[1])
         self.burst_write(BITRATEMSB, bitrate)
 
     def set_rate(self, v):
@@ -245,9 +244,7 @@ class RFM69HCW(RadioInterface):
     def get_lna_current_gain(self):
         return read_bits(self.read(LNA), 0x02, 0x03)
 
-    def set_lna_current_gain(self, value):
-        self.set_bits(LNA, value, 0x02, 0x03)
-
+    # read only
     def get_lna_gain_select(self):
         return read_bits(self.read(LNA), 0x05, 0x03)
 
@@ -276,21 +273,39 @@ class RFM69HCW(RadioInterface):
         return fc
 
     def set_dcc_freq(self, value):
-        self.set_bits(RXBW, value, 0x01, 0x03)
+        self.set_bits(RXBW, value, 0x00, 0x03)
 
-    def get_rx_bw(self):
-        pass
+    def get_rx_bw_mant(self):
+        return read_bits(self.read(RXBW), 0x03, 0x02)
 
-    def set_rx_bw(self, value):
-        self.set_bits(RXBW, value, 0x01, 0x03)
+    def set_rx_bw_mant(self, value):
+        self.set_bits(RXBW, value, 0x03, 0x02)
+
+    def get_rx_bw_exp(self):
+        return read_bits(self.read(RXBW), 0x05, 0x03)
+
+    def set_rx_bw_exp(self, value):
+        self.set_bits(RXBW, value, 0x05, 0x03)
 
     # RegAfcBw 0x1a
 
     def get_dcc_freq_afc(self):
-        return read_bits(self.read(AFCBW))
+        return read_bits(self.read(AFCBW), 0x00, 0x03)
     
     def set_dcc_freq_afc(self, value):
-        self.burst_write(AFCBW, value)
+        self.set_bits(AFCBW, value, 0x00, 0x03)
+
+    def get_rx_bw_mant_afc(self):
+        return read_bits(self.read(AFCBW), 0x03, 0x02)
+    
+    def set_rx_bw_mant_afc(self, value):
+        self.set_bits(AFCBW, value, 0x03, 0x02)
+
+    def get_rx_bw_exp_afc(self):
+        return read_bits(self.read(AFCBW), 0x05, 0x03)
+
+    def set_rx_bw_exp_afc(self, value):
+        self.set_bits(AFCBW, value, 0x05, 0x03)
 
     # RegAfcFei 0x1e
 
