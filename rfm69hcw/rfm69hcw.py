@@ -502,27 +502,27 @@ class RFM69HCW(RadioInterface):
     def set_continuous_dagc(self, value):
         self.set_bits(TESTDAGC, value)
 
-    def send(self, data):
-        data_len = len(data)
-        payload = bytearray([0x80, data_len, 0xff]) + bytearray(data)
-        print('sending {} bytes'.format(data_len))
-        self._spi_write(payload)
+    # def send(self, data):
+    #     data_len = len(data)
+    #     payload = bytearray([0x80, data_len, 0xff]) + bytearray(data)
+    #     print('sending {} bytes'.format(data_len))
+    #     self._spi_write(payload)
         
-        self.set_mode('STDBY')
-        while not self.get_mode_ready():
-            utime.sleep_ms(5)
-            print('waiting stand by...')
+    #     self.set_mode('STDBY')
+    #     while not self.get_mode_ready():
+    #         utime.sleep_ms(5)
+    #         print('waiting stand by...')
         
-        self.set_mode('TX')
-        while not self.get_mode_ready():
-            utime.sleep_ms(5)
-            print('waiting tx...')
+    #     self.set_mode('TX')
+    #     while not self.get_mode_ready():
+    #         utime.sleep_ms(5)
+    #         print('waiting tx...')
 
-        while self.get_fifo_not_empty():
-            utime.sleep(0.5)
-            print('waiting empty fifo...')
+    #     while self.get_fifo_not_empty():
+    #         utime.sleep(0.5)
+    #         print('waiting empty fifo...')
 
-        self.set_mode('STDBY')
-        while not self.get_mode_ready():
-            utime.sleep_ms(5)
-            print('waiting stand by...')
+    #     self.set_mode('STDBY')
+    #     while not self.get_mode_ready():
+    #         utime.sleep_ms(5)
+    #         print('waiting stand by...')

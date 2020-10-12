@@ -10,12 +10,6 @@
 |STM32      |WIP        |
 \* memory issues, need to move to frozen module
 
-#### notes
-
-|<-preamble->|<-sync-->|<-len->|<-addr->|<-data->|<-crc->|
-
-|<--8 * n--->|<-16/32->|<--8-->|<--8--->|<-8*n-->|<-16-->|
-
 #### other rf chips to eventually support
 
 |chip      |ask|ook|2fsk|2gfsk|4fsk|msk|gmsk|psk|lora|note|

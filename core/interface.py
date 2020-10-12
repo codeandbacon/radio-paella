@@ -1,15 +1,22 @@
 from micropython import const
 from core.helper import *
+import utime
 
 LOW = const(0x00)
 HIGH = const(0x01)
 
 class RadioInterface():
 
-    def __init__(self, spi, cs):
+    def __init__(self, spi, cs, led_pin=None, led_source=True):
+        
+        self.led_source = led_source
+        
         self.spi = spi
         self.cs = cs
         self.spi.init()
+        if led_pin:
+            led_pin.value(not led_source)
+        self.led_pin = led_pin
 
     def _spi_read(self, address, length=2):
         self.cs.value(LOW)
@@ -23,6 +30,18 @@ class RadioInterface():
         self.spi.write_readinto(write_buf, read_buf)
         self.cs.value(HIGH)
         return read_buf
+
+    def blink(self, n=1):
+        if self.led_pin is None: return
+
+        ON = self.led_source
+        OFF = not self.led_source
+
+        for _ in range(n):
+            self.led_pin.value(ON)
+            utime.sleep_ms(200)
+            self.led_pin.value(OFF)
+            utime.sleep_ms(200)
 
     def set_bits(self, register, change, start=0, length=8):
         current = read_bits(self.read(register))

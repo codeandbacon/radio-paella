@@ -6,7 +6,7 @@ from .configuration import *
 from .strobes import *
 from core.interface import RadioInterface
 from time import sleep
-# from core.esp_spi import EspSPI
+import utime
 from .response import *
 
 BURST_WRITE = const(0x40)
@@ -28,13 +28,15 @@ def read_bits(value, start=0, length=8):
 
 class CC1101(RadioInterface):
 
-    def __init__(self, spi, cs, gdo0=None, gdo2=None, endian='big', xosc=26000000):
-        
-        super().__init__(spi, cs)
+    endian = 'big'
 
-        # self.cc1101 = EspSPI(spi, cs, gdo0=gdo0, gdo2=gdo2)
+    def __init__(self, spi, cs, gdo0=None, gdo2=None, xosc=26000000, **kwargs):
+        
+        super().__init__(spi, cs, **kwargs)
+
+        self.gdo0 = gdo0
+        self.gdo2 = gdo2
         self.FREQ_XOSC = xosc
-        self.endian = endian
 
     def read(self, address, status_byte=False):
         # self.register_addr_space(address)
@@ -70,6 +72,26 @@ class CC1101(RadioInterface):
         if address < 0xf0 or address > 0xfd:
             raise Exception('not a status register address')
         return self._spi_read(address)[1]
+
+    # methods
+
+    def send(self, data):
+        if self.get_marc_state() == 'RXFIFO_OVERFLOW':
+            self.strobe(SFRX)
+            while self.get_marc_state() != 'IDLE':
+                utime.sleep_us(1000)
+        data_len = len(data)
+        d = bytearray([data_len]) + bytearray(data)
+        self.tx_fifo(d)
+        self.strobe(STX)
+        while(not self.gdo0.value()):
+            utime.sleep_us(10)    
+        while(self.gdo0.value()):
+            utime.sleep_us(10)
+        self.strobe(SFTX)
+        while self.get_marc_state() != 'IDLE':
+            utime.sleep_us(1000)
+        self.strobe(SRX)
 
     # 0x00, 0x01, 0x02, output pin configuration
 
