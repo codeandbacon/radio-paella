@@ -1,12 +1,11 @@
 import sys
 from machine import Pin, SPI, UART
-from cc1101 import CC1101
-from configuration import *
+from cc1101.cc1101 import CC1101
+from cc1101.configuration import *
+from cc1101.strobes import *
 import utime
-from strobes import *
 import uos
 import uasyncio
-from rfm69hcw import RFM69HCW
 
 red_led = Pin(16, Pin.OUT) # extra
 blue_led = Pin(2, Pin.OUT) # built-in
@@ -133,39 +132,42 @@ def handler(pin):
 gdo0.irq(trigger=Pin.IRQ_FALLING, handler=handler)
 
 # set RX state
-t.cc1101.strobe(SRX)
+t.strobe(SRX)
+
+def init():
+    return t
 
 def send(data):
     if t.get_marc_state() == 'RXFIFO_OVERFLOW':
-        t.cc1101.strobe(SFRX)
+        t.strobe(SFRX)
         while t.get_marc_state() != 'IDLE':
             utime.sleep_us(1000)
     data_len = len(data)
     d = bytearray([data_len]) + bytearray(data)
     t.tx_fifo(d)
-    t.cc1101.strobe(STX)
+    t.strobe(STX)
     while(not gdo0.value()):
         utime.sleep_us(10)    
     while(gdo0.value()):
         utime.sleep_us(10)
-    t.cc1101.strobe(SFTX)
+    t.strobe(SFTX)
     while t.get_marc_state() != 'IDLE':
         utime.sleep_us(1000)
-    t.cc1101.strobe(SRX)
+    t.strobe(SRX)
 
-async def serial_recv():
-    reader = uasyncio.StreamReader(uart)
-    while True:
-        rec = await reader.readline()
-        rec = rec.rstrip(b'\n')
-        if rec[:3] == b'pkt':
-            blink(blue_led)
-            send(rec[3:])
-        elif rec[:3] == b'cfg':
-            blink(blue_led, 2)
-            cmd, value = rec[3:].decode().split(',')
-            uart.write(cmd.encode('utf8') + value.encode('utf8') + b'--')
-        blink(blue_led, 3)
+# async def serial_recv():
+#     reader = uasyncio.StreamReader(uart)
+#     while True:
+#         rec = await reader.readline()
+#         rec = rec.rstrip(b'\n')
+#         if rec[:3] == b'pkt':
+#             blink(blue_led)
+#             send(rec[3:])
+#         elif rec[:3] == b'cfg':
+#             blink(blue_led, 2)
+#             cmd, value = rec[3:].decode().split(',')
+#             uart.write(cmd.encode('utf8') + value.encode('utf8') + b'--')
+#         blink(blue_led, 3)
 
 # loop = uasyncio.get_event_loop()
 # loop.create_task(serial_recv())

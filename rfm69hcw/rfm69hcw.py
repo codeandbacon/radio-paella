@@ -38,15 +38,15 @@ SINGLE_WRITE = const(0x80)
 
 class RFM69HCW(RadioInterface):
 
-    def __init__(self, spi, cs, rst=None, endian='big', xosc=32000000):
+    def __init__(self, spi, cs, rst=None, endian='big', xosc=32000000, debug=True):
         
-        super(RFM69HCW, self).__init__(spi, cs)
+        super().__init__(spi, cs)
 
+        self.debug = debug
         self.FREQ_XOSC = xosc
         self.endian = endian
         self.rst = rst
-        if rst:
-            rst.value(0)
+        rst.value(0)
 
         self.FSTEP = xosc/(2**19)
 
@@ -67,14 +67,38 @@ class RFM69HCW(RadioInterface):
         self._spi_write(write_buf)
 
     def reset(self):
-        if not self.rst:
-            print('no reset pin')
-            return
         self.rst.value(1)
         utime.sleep_ms(5)
         self.rst.value(0)
-        utime.sleep_ms(5)
 
+    # send
+
+    def send(self, data):
+        # back to stand-by
+        self.set_mode('STDBY')
+        
+        while not self.get_mode_ready():
+            print('waiting stand by...')
+            utime.sleep_ms(10)
+
+        data_len = len(data)
+        data = bytearray([data_len]) + bytearray(data)
+        
+        # load data into FIFO
+        self.set_fifo(data)
+
+        # enter TX mode
+        self.set_mode('TX')
+
+        while not self.get_mode_ready():
+            print('waiting TX...')
+            utime.sleep_ms(10)
+
+        # return to stand-by after sending
+        self.set_mode('STDBY')
+        while not self.get_mode_ready():
+            print('waiting stand by...')
+            utime.sleep_ms(10)
 
     # RegFifo 0x00
 
